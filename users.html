@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Transition - ADMIN PANEL - Users</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Pacifico&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="index.html">FCM</a></li>
+        <li class="selected"><a href="users.html">Users</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Users</h1>
+
+    <div class="users-table">
+      <div class="refresh-button">
+        <button onclick="refreshUsers()">Refresh</button>
+      </div>
+      <table id="usersList">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="noUsersRow">
+            <td colspan="2">No users found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <div class="footer-left">
+        &copy; 2023 My Transition. All rights reserved.
+      </div>
+      <div class="footer-right">
+        <a href="#">Imprint</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-admin.js"></script>
+<script src="fcm-server.js"></script>
+<script>
+  // Import the File System module
+  const fs = require('fs');
+
+  // Read the contents of the JSON file
+  const credentials = JSON.parse(fs.readFileSync('my-transition-firebase-adminsdk-piec0-30edcad8d9.json'));
+
+  // Initialize Firebase Admin SDK with the credentials from the JSON file
+  firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(credentials),
+    databaseURL: "https://my-transition-default-rtdb.europe-west1.firebasedatabase.app"
+  });
+
+  // Fetch and display users data
+  var usersList = document.getElementById("usersList");
+  var usersRef = firebaseAdmin.database().ref("users");
+
+  usersRef.on("value", function(snapshot) {
+    usersList.innerHTML = "";
+    snapshot.forEach(function(childSnapshot) {
+      var user = childSnapshot.val();
+      var userElement = document.createElement("tr");
+      var nameElement = document.createElement("td");
+      var emailElement = document.createElement("td");
+      nameElement.innerText = user.name;
+      emailElement.innerText = user.email;
+      userElement.appendChild(nameElement);
+      userElement.appendChild(emailElement);
+      usersList.appendChild(userElement);
+    });
+
+    if (snapshot.exists()) {
+      document.getElementById("noUsersRow").style.display = "none";
+    } else {
+      document.getElementById("noUsersRow").style.display = "table-row";
+    }
+  });
+
+  // Refresh users data
+  function refreshUsers() {
+    usersRef.off(); // Unsubscribe from previous data listeners
+    usersRef.on("value", function(snapshot) {
+      usersList.innerHTML = "";
+      snapshot.forEach(function(childSnapshot) {
+        var user = childSnapshot.val();
+        var userElement = document.createElement("tr");
+        var nameElement = document.createElement("td");
+        var emailElement = document.createElement("td");
+        nameElement.innerText = user.name;
+        emailElement.innerText = user.email;
+        userElement.appendChild(nameElement);
+        userElement.appendChild(emailElement);
+        usersList.appendChild(userElement);
+      });
+
+      if (snapshot.exists()) {
+        document.getElementById("noUsersRow").style.display = "none";
+      } else {
+        document.getElementById("noUsersRow").style.display = "table-row";
+      }
+    });
+  }
+</script>
+</body>
+</html>

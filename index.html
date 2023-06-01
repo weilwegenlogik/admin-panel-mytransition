@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Transition - ADMIN PANEL</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Pacifico&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li class="selected"><a href="index.html">FCM</a></li>
+        <li><a href="users.html">Users</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>FCM</h1>
+
+    <label for="target">Choose target(s):</label>
+    <select id="target">
+      <option value="all">Send to all devices</option>
+      <option value="device">Send to specific device</option>
+      <option value="topic">Send to topic</option>
+    </select>
+
+    <label for="title">Message Title:</label>
+    <input type="text" id="title">
+
+    <label for="body">Message Body:</label>
+    <input type="text" id="body">
+
+    <button onclick="sendMessage()">Send Message</button>
+
+    <div id="statusIndicator" class="status-indicator">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText"></span>
+    </div>
+
+    <hr class="divider">
+
+<h1>Message History</h1>
+<div id="messageHistory"></div>
+<button onclick="loadMessageHistory()">Load / Refresh</button>
+
+
+  </main>
+
+  
+
+  <footer>
+    <div class="footer-links">
+      <div class="footer-left">
+        &copy; 2023 My Transition. All rights reserved.
+      </div>
+      <div class="footer-right">
+        <a href="#">Imprint</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+
+
+function sendMessage() {
+  var target = document.getElementById("target").value;
+  var title = document.getElementById("title").value;
+  var body = document.getElementById("body").value;
+
+  var message = {
+    notification: {
+      title: title,
+      body: body
+    }
+  };
+
+  var statusDot = document.getElementById("statusDot");
+  var statusText = document.getElementById("statusText");
+
+  statusDot.className = "status-dot";
+  statusText.textContent = "";
+
+  statusDot.classList.add("status-dot-blue");
+  statusText.textContent = "Sending...";
+
+  if (target === "device") {
+    var deviceToken = prompt("Enter the device token:");
+    message.token = deviceToken;
+  } else if (target === "topic") {
+    var topic = prompt("Enter the topic name:");
+    message.topic = topic;
+  }
+
+  fetch('http://localhost:5500/send-fcm-message', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(message)
+  })
+    .then(function(response) {
+      if (response.ok) {
+        statusDot.classList.remove("status-dot-blue");
+        statusDot.classList.add("status-dot-green");
+        statusText.textContent = "Message Sent!";
+      } else {
+        statusDot.classList.remove("status-dot-blue");
+        statusDot.classList.add("status-dot-red");
+        statusText.textContent = "Message Failed";
+      }
+    })
+    .catch(function(error) {
+      statusDot.classList.remove("status-dot-blue");
+      statusDot.classList.add("status-dot-red");
+      statusText.textContent = "Message Failed";
+      console.error("Failed to send message:", error);
+    });
+}
+
+
+    function loadMessageHistory() {
+        fetch('/message-history')
+            .then((response) => response.json())
+            .then((data) => {
+            // Display the loaded messages
+            const historyContainer = document.getElementById('messageHistory');
+            historyContainer.innerHTML = '';
+
+            data.forEach((message) => {
+                const messageItem = document.createElement('p');
+                messageItem.textContent = message;
+                historyContainer.appendChild(messageItem);
+            });
+            })
+            .catch((error) => {
+            console.error('Failed to load message history:', error);
+            });
+        }
+  </script>
+</body>
+</html>
